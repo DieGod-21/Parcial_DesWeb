@@ -1,25 +1,25 @@
-// src/db.js
-require("dotenv").config();
+// Conexión MSSQL + modo sin BD (Render)
 const sql = require("mssql");
+let poolPromise = null;
 
-const config = {
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  server: process.env.DB_HOST,      // ej: localhost
-  database: process.env.DB_NAME,
-  port: process.env.DB_PORT ? Number(process.env.DB_PORT) : 1433,
-  options: {
-    encrypt: true,                  // Azure: true; local: true con trustServerCertificate
-    trustServerCertificate: true,   // local SQL Server
-  },
-  pool: { max: 10, min: 0, idleTimeoutMillis: 30000 },
-};
-
-let pool;
 async function getPool() {
-  if (pool) return pool;
-  pool = await sql.connect(config);
-  return pool;
+  if (process.env.USE_FAKE_DB === "true") return null; // desactiva BD
+  if (!poolPromise) {
+    const config = {
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      server: process.env.DB_SERVER,
+      database: process.env.DB_NAME,
+      port: Number(process.env.DB_PORT || 1433),
+      options: { encrypt: true, trustServerCertificate: false },
+      pool: { max: 10, min: 0, idleTimeoutMillis: 30000 },
+    };
+    poolPromise = sql.connect(config).catch((e) => {
+      poolPromise = null;
+      throw e;
+    });
+  }
+  return poolPromise;
 }
 
 module.exports = { sql, getPool };
