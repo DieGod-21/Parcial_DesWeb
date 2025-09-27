@@ -12,14 +12,17 @@ app.use(cors());
 app.use(express.json());
 
 // Swagger
+// src/server.js
 const swaggerSpec = swaggerJSDoc({
   definition: {
     openapi: "3.0.3",
     info: { title: "API Parcial – UMG", version: "1.0.0" },
-    servers: [{ url: "http://localhost:" + (process.env.PORT || 3000) }],
+    // 🔧 Usa URL relativa para que funcione en localhost y en Render
+    servers: [{ url: "/" }],
   },
   apis: [path.join(__dirname, "routes/**/*.js")],
 });
+
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.get("/docs.json", (_req, res) => res.json(swaggerSpec));
 
